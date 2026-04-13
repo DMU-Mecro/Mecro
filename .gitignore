@@ -40,9 +40,10 @@ wheels/
 .streamlit/secrets.toml
 
 # Data files (but keep structure)
-data/*.csv
+# data/*.csv  # 배포용 샘플 데이터는 포함
 data/*.json
 data/*.xlsx
+# 단, data/raw/ 폴더는 추적
 
 # Logs
 *.log
