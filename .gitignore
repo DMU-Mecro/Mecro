@@ -1,12 +1,9 @@
-# Python
+# --- Python Standard ---
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
 build/
 develop-eggs/
 dist/
@@ -22,47 +19,48 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.cache
+.cache/
 
-# Virtual environments
+# --- Virtual Environments ---
+# 가상환경 내 수백 개의 라이브러리 파일은 깃 관리에서 제외합니다.
 .venv/
-.env
+env/
+venv/
+ENV/
 
-# IDE
+# --- Environment & Secrets ---
+# API 키가 포함된 설정 파일은 절대 공유되지 않아야 합니다.
+.env
+.env.local
+.env.*.local
+.streamlit/secrets.toml
+
+# --- IDE & OS ---
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
-# Streamlit
-.streamlit/
-.streamlit/secrets.toml
-
-# Data files (but keep structure)
+# --- Data & Databases ---
+# 수집된 원본 데이터와 무거운 벡터 DB 파일은 로컬에서만 관리합니다.
 data/*.csv
 data/*.json
 data/*.xlsx
+vector_db/
+data/vector_db/
 
-# Logs
+# --- Logs & Temp ---
 *.log
 logs/
-
-# Temp files
 *.tmp
 *.temp
 *.bak
 _old/
+tmp_*/
 
-# Environment
-.env
-.env.local
-.env.*.local
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Project specific
-*.cache
-.cache/
+# --- Streamlit ---
+.streamlit/

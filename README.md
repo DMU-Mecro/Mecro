@@ -4,6 +4,20 @@
 
 최신 경제 뉴스와 주요 발언을 기반으로 거시경제 현상의 원인을 **RAG 기반 AI가 설명**하는 금융 분석 대시보드입니다.
 
+## 🔄 최근 업데이트 (지금까지 진행된 내용)
+
+- `requirements.txt` 정리: 코드베이스에서 사용되는 패키지를 추출해 `requirements.txt`를 업데이트하고, 현재 `.venv`에 설치된 정확한 버전으로 고정했습니다. (파일: [requirements.txt](requirements.txt))
+- 가상환경 정리 및 재설치: 기존 가상환경에서 불필요한 패키지를 제거한 뒤, 필요한 패키지만 재설치하여 개발 환경을 정리했습니다. 재설치 결과는 `installed_after.txt`에 기록되어 있습니다.
+- LangChain / RAG 관련 패키지 설치와 일부 대형 의존성(chromadb, onnxruntime 등) 설치 시 파일 잠금 문제가 발생하여 잠금 해제 후 재시도하여 설치를 완료했습니다.
+
+## 🧭 다음 작업 (우선순위)
+
+- 로컬에서 Streamlit 앱 실행 및 기능 통합 테스트(`app.py` 실행).
+- `core/scraper.py`, `core/analyzer.py`, `core/rag_engine.py`의 통합 검증 및 에러 처리 보완.
+- 불필요한 대형 의존성(예: `onnxruntime`, `chromadb`)에 대해 사용 여부를 재검토하고 필요시 제거하여 경량화.
+- `requirements.txt`를 커밋하고, CI 환경에서 동일한 설치가 재현되는지 검증.
+
+
 ## 📌 프로젝트 정체성
 
 ### 🎯 핵심 비전

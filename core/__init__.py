@@ -1,16 +1,7 @@
 """
-core/__init__.py
-백엔드 모듈 패키지
+NewsDoc 핵심 백엔드 패키지
 """
-
-from .scraper import (
-    generate_market_echo_index,
-    generate_asset_prices,
-    generate_dummy_news
-)
-
-__all__ = [
-    'generate_market_echo_index',
-    'generate_asset_prices',
-    'generate_dummy_news'
-]
+# 패키지 초기화를 위해 내용을 비워두거나, 
+from .scraper import fetch_accumulated_news, fetch_robust_market_data
+from .rag_engine import NewsRAG
+from .analyzer import NewsAnalyzer

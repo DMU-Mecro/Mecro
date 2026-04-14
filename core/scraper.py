@@ -1,113 +1,106 @@
-"""
-core/scraper.py
-더미 데이터 수집 및 생성 엔진 (실제 API 연동 예정)
-"""
-
+import os
+import time
 import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-import random
+import yfinance as yf
+import feedparser
+from datetime import datetime
 
+# 1. 로컬 경로 및 전역 설정
+DATA_PATH = "./data/raw"
+os.makedirs(DATA_PATH, exist_ok=True)
 
-def generate_market_echo_index(days=252, volatility=5):
-    """
-    MarketEcho Index 생성 (0~100 범위의 난수)
-    
-    Args:
-        days (int): 생성할 날짜 수
-        volatility (float): 변동성 (표준편차)
-    
-    Returns:
-        pd.DataFrame: 날짜와 지수값이 포함된 데이터프레임
-    """
-    dates = pd.date_range(end=datetime.now(), periods=days, freq='D')  # Daily
-    
-    # 랜덤 워크 시뮬레이션
-    base_index = 50
-    changes = np.random.randn(days) * volatility
-    index_values = base_index + np.cumsum(changes)
-    index_values = np.clip(index_values, 0, 100)  # 0~100 범위로 제한
-    
-    return pd.DataFrame({
-        'date': dates,
-        'market_echo_index': index_values
-    })
+RSS_SOURCES = {
+    "Yahoo_Main": "https://finance.yahoo.com/news/rss",
+    "Yahoo_CentralBank": "https://finance.yahoo.com/news/category-central-banks/rss",
+    "Yahoo_Economy": "https://finance.yahoo.com/news/category-economy/rss"
+}
 
-
-def generate_asset_prices(days=252):
-    """
-    자산별 가격 시뮬레이션 (국채, 금, 달러)
-    
-    Args:
-        days (int): 생성할 날짜 수
-    
-    Returns:
-        pd.DataFrame: 자산별 가격 데이터프레임
-    """
-    dates = pd.date_range(end=datetime.now(), periods=days, freq='D')
-    
-    # 국채 (Bond Yield % per annum)
-    bond_base = 4.5
-    bond_changes = np.random.randn(days) * 0.1
-    bond_yield = bond_base + np.cumsum(bond_changes) / 100
-    bond_yield = np.clip(bond_yield, 2, 6)
-    
-    # 금 가격 (Gold, USD/oz)
-    gold_base = 2000
-    gold_changes = np.random.randn(days) * 50
-    gold_price = gold_base + np.cumsum(gold_changes)
-    gold_price = np.clip(gold_price, 1500, 2500)
-    
-    # 달러 지수 (USD Index)
-    dollar_base = 100
-    dollar_changes = np.random.randn(days) * 0.5
-    dollar_index = dollar_base + np.cumsum(dollar_changes)
-    dollar_index = np.clip(dollar_index, 95, 110)
-    
-    return pd.DataFrame({
-        'date': dates,
-        'bond_yield': bond_yield,
-        'gold_price': gold_price,
-        'dollar_index': dollar_index
-    })
-
-
-def generate_dummy_news(days=252, num_news=15):
-    """
-    뉴스 항목 생성 (더미 데이터)
-    
-    Args:
-        days (int): 데이터 범위 (일)
-        num_news (int): 생성할 뉴스 개수
-    
-    Returns:
-        pd.DataFrame: 뉴스 데이터프레임
-    """
-    categories = ['금융', '거시경제', '에너지', '통화정책', '인플레이션']
-    headlines = [
-        "연준, 기준금리 유지 결정...앞으로의 방향성은?",
-        "금값이 2025년 이래 최고가 경신",
-        "달러 약세 지속으로 신흥시장 자산 강세",
-        "유로존 경제지표 좋은 신호",
-        "국채 수익률 급등, 채권 투자자 긴장",
-        "유가 상승 추세 계속, 수입물가 우려",
-        "미중 무역 긴장 고조, 환율 변동성 증가",
-        "ECB, 통화정책 정상화 가속화",
-        "인플레이션 지표 3개월 연속 상승",
-        "기술주 약세로 주가지수 조정",
+# 2. 거시경제 뉴스 필터링
+def is_macro_news(title):
+    exclude_keywords = [
+        'CD rates', 'Credit score', 'Sallie Mae', 'Personal Finance',
+        'Tax refund', 'Best banks', 'HELOC', 'Mortgage rates today',
+        'Credit card', 'Savings account'
     ]
+    return not any(keyword.lower() in title.lower() for keyword in exclude_keywords)
+
+# 3. 뉴스 수집 엔진 (로컬 최적화 버전)
+def fetch_accumulated_news(limit_year="2026"):
+    all_news = []
+    for name, url in RSS_SOURCES.items():
+        print(f"📡 {name} 피드 분석 중...")
+        feed = feedparser.parse(url)
+        for entry in feed.entries:
+            if not is_macro_news(entry.title): continue
+
+            try:
+                published_at = time.strftime('%Y-%m-%d %H:%M:%S', entry.published_parsed)
+            except:
+                published_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            if not published_at.startswith(limit_year): continue
+
+            all_news.append({
+                "title": entry.title,
+                "url": entry.link,
+                "published_at": published_at,
+                "source": name,
+                "context_text": f"[{published_at}] {name}: {entry.title}"
+            })
+
+    file_path = os.path.join(DATA_PATH, "raw_news.csv")
+    if not all_news:
+        print("💡 수집된 신규 거시경제 뉴스가 없습니다.")
+        return pd.read_csv(file_path) if os.path.exists(file_path) else pd.DataFrame()
+
+    new_df = pd.DataFrame(all_news)
+
+    # 기존 데이터와 병합 로직 (누적)
+    if os.path.exists(file_path):
+        old_df = pd.read_csv(file_path)
+        old_df = old_df[old_df['published_at'].str.startswith(limit_year)]
+        new_only_df = new_df[~new_df['url'].isin(old_df['url'])].copy()
+        final_df = pd.concat([old_df, new_only_df]).drop_duplicates(subset=['url'], keep='first')
+    else:
+        final_df = new_df
+
+    final_df.sort_values(by='published_at', ascending=False, inplace=True)
+    final_df.to_csv(file_path, index=False, encoding='utf-8-sig')
+    print(f"✅ 뉴스 업데이트 완료: 총 {len(final_df)}개")
+    return final_df
+
+# 4. 마켓 데이터 수집 엔진
+def fetch_robust_market_data(period="1mo"):
+    tickers = {
+        "10Y_Bond": "^TNX", "Gold": "GC=F", "Silver": "SI=F",
+        "Copper": "HG=F", "USD_Index": "DX-Y.NYB", "Aluminum": "ALI=F"
+    }
+    all_data = []
+    for name, ticker in tickers.items():
+        print(f"📈 {name} 로드 중...")
+        try:
+            df = yf.Ticker(ticker).history(period=period, interval="1h")
+            if not df.empty:
+                df = df[['Close']].rename(columns={'Close': name})
+                df.index = df.index.tz_localize(None).floor('h')
+                all_data.append(df)
+        except Exception as e:
+            print(f"⚠️ {name} 실패: {e}")
+
+    if not all_data: return pd.DataFrame()
+
+    market_df = pd.concat(all_data, axis=1)
+    market_df = market_df[~market_df.index.duplicated(keep='first')]
     
-    base_date = datetime.now() - timedelta(days=days)
-    news_data = []
-    
-    for i in range(num_news):
-        news_date = base_date + timedelta(days=random.randint(0, days-1))
-        news_data.append({
-            'date': news_date,
-            'headline': random.choice(headlines),
-            'category': random.choice(categories),
-            'url': f"https://finance.yahoo.com/news/article-{i+1}",
-            'keywords': random.sample(['금리', '환율', '인플레이션', '채권'], 2)
-        })
-    
-    return pd.DataFrame(news_data).sort_values('date', ascending=False)
+    # 결측치 보간 처리
+    full_index = pd.date_range(start=market_df.index.min(), end=market_df.index.max(), freq='h')
+    market_df = market_df.reindex(full_index).ffill().bfill()
+
+    market_df.to_csv(os.path.join(DATA_PATH, "market_prices.csv"))
+    print(f"✅ 마켓 데이터 완료: {len(market_df)} 행")
+    return market_df
+
+if __name__ == "__main__":
+    # 독립 실행 테스트용
+    fetch_accumulated_news()
+    fetch_robust_market_data()
