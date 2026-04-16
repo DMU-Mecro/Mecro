@@ -72,13 +72,10 @@ class NewsRAG:
             return f"💡 {topic} 관련 데이터가 부족합니다. 업데이트 버튼을 먼저 눌러주세요."
         
         context = "\n".join([f"- {doc.page_content}" for doc in retrieved_docs])
-        
-        # 2. 페르소나를 주제에 맞게 유동적으로 변경
-        genai.configure(api_key=self.api_key)
-        model = genai.GenerativeModel(model_name="gemini-3.1-flash-lite-preview")
 
+        # 2. 페르소나를 주제에 맞게 유동적으로 변경
         prompt = f"""
-        당신은 {topic} 분야에 정통한 글로벌 시장 전략가입니다.
+        당신은 {topic} 분야의 글로벌 투자 전략가입니다.
         
         [현재 MarketEcho 지수]: {index_score:.2f}
         [참조 뉴스 데이터]:
