@@ -47,11 +47,13 @@ Thumbs.db
 
 # --- Data & Databases ---
 # 수집된 원본 데이터와 무거운 벡터 DB 파일은 로컬에서만 관리합니다.
+data/raw/*.csv
 data/*.csv
 data/*.json
 data/*.xlsx
 vector_db/
 data/vector_db/
+sentiment_results.csv
 
 # --- Logs & Temp ---
 *.log
