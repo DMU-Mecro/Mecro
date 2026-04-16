@@ -65,4 +65,4 @@ _old/
 tmp_*/
 
 # --- Streamlit ---
-.streamlit/
+.streamlit/secrets.toml
