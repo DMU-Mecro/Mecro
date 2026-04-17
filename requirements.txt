@@ -11,3 +11,4 @@ chromadb
 plotly
 langchain-google-genai
 langchain-chroma
+pysqlite3-binary
