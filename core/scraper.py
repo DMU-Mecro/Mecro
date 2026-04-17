@@ -3,7 +3,10 @@ import time
 import pandas as pd
 import yfinance as yf
 import feedparser
-from datetime import datetime
+from datetime import datetime, timedelta
+
+# 0. 한국 시간 설정 (UTC+9)
+kst_now = datetime.utcnow() + timedelta(hours=9)
 
 # 1. 로컬 경로 및 전역 설정
 DATA_PATH = "./data/raw"
@@ -27,16 +30,22 @@ def is_macro_news(title):
 # 3. 뉴스 수집 엔진 (로컬 최적화 버전)
 def fetch_accumulated_news(limit_year="2026"):
     all_news = []
+    now_kst = datetime.utcnow() + timedelta(hours=9)
+    
     for name, url in RSS_SOURCES.items():
         print(f"📡 {name} 피드 분석 중...")
         feed = feedparser.parse(url)
+        
         for entry in feed.entries:
+            # 1단계: 매크로 필터링
             if not is_macro_news(entry.title): continue
 
+            # 2단계: 날짜 처리 (KST 기준)
             try:
-                published_at = time.strftime('%Y-%m-%d %H:%M:%S', entry.published_parsed)
+                pub_time = datetime(*entry.published_parsed[:6]) + timedelta(hours=9)
+                published_at = pub_time.strftime('%Y-%m-%d %H:%M:%S')
             except:
-                published_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                published_at = now_kst.strftime('%Y-%m-%d %H:%M:%S')
 
             if not published_at.startswith(limit_year): continue
 
@@ -45,7 +54,7 @@ def fetch_accumulated_news(limit_year="2026"):
                 "url": entry.link,
                 "published_at": published_at,
                 "source": name,
-                "context_text": f"[{published_at}] {name}: {entry.title}"
+                "context_text": f"[{published_at}] {name}: {entry.title}. Summary: {getattr(entry, 'summary', '')}"
             })
 
     file_path = os.path.join(DATA_PATH, "raw_news.csv")
