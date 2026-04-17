@@ -1,4 +1,5 @@
 import os
+import streamlit as st
 import pandas as pd
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
@@ -10,7 +11,7 @@ load_dotenv()
 
 class NewsRAG:
     def __init__(self):
-        self.api_key = os.getenv("GOOGLE_API_KEY")
+        self.api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("GOOGLE_API_KEY가 설정되지 않았습니다.")
         

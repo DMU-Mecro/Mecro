@@ -10,9 +10,20 @@ from core.scraper import fetch_accumulated_news, fetch_robust_market_data
 from core.rag_engine import NewsRAG
 from core.analyzer import NewsAnalyzer
 
+@st.cache_resource
+def get_rag_engine():
+    """RAG 엔진을 한 번만 로드하여 메모리 낭비를 방지함"""
+    return NewsRAG()
+
+@st.cache_resource
+def get_analyzer():
+    """감성 분석 엔진을 캐싱함"""
+    return NewsAnalyzer()
+
 # --- 1. 실전 데이터 로드 및 처리 ---
 
 def load_real_data():
+    os.makedirs("./data/raw", exist_ok=True)
     """CSV 파일에서 실제 데이터를 읽어오고 분석 결과를 합산함"""
     news_path = "./data/raw/raw_news.csv"
     market_path = "./data/raw/market_prices.csv"

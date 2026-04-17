@@ -1,4 +1,5 @@
 import os
+import streamlit as st
 import json
 import pandas as pd
 import concurrent.futures
@@ -11,7 +12,7 @@ load_dotenv()
 class NewsAnalyzer:
     def __init__(self):
         # API 키 설정 및 유효성 검사
-        self.api_key = os.getenv("GOOGLE_API_KEY")
+        self.api_key = os.getenv("GOOGLE_API_KEY") or st.secrets.get("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("GOOGLE_API_KEY가 설정되지 않았습니다. .env 파일을 확인하세요.")
         genai.configure(api_key=self.api_key)
