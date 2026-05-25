@@ -1,0 +1,14 @@
+streamlit
+google-generativeai
+langchain
+yfinance
+beautifulsoup4
+feedparser
+pandas
+numpy
+python-dotenv
+chromadb
+plotly
+langchain-google-genai
+langchain-chroma
+pysqlite3-binary
